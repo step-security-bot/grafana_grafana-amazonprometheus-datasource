@@ -34,3 +34,8 @@ updates:
       all-dependencies:
         patterns:
           - '*'
+
+  - package-ecosystem: docker
+    directory: /.config
+    schedule:
+      interval: daily

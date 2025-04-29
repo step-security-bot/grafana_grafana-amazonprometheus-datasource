@@ -18,11 +18,16 @@ jobs:
     outputs:
       matrix: ${{ steps.resolve-versions.outputs.matrix }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit
+
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Resolve Grafana E2E versions
         id: resolve-versions
-        uses: grafana/plugin-actions/e2e-version@main
+        uses: grafana/plugin-actions/e2e-version@c233e9f6752186a9b256a2a451ec3067fbf712c2 # main
         with:
           version-resolver-type: version-support-policy
 
@@ -38,13 +43,18 @@ jobs:
     name: e2e ${{ matrix.GRAFANA_IMAGE.name }}
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit
+
       - name: Print Grafana Image Name
         run: echo "Running for ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: 'yarn'
@@ -53,7 +63,7 @@ jobs:
         run: yarn install
 
       - name: Install Mage
-        uses: magefile/mage-action@v3
+        uses: magefile/mage-action@6f50bbb8ea47d56e62dee92392788acbc8192d0b # v3.1.0
         with:
           install-only: true
 
@@ -72,7 +82,7 @@ jobs:
           GRAFANA_VERSION=${{ matrix.GRAFANA_IMAGE.VERSION }} GRAFANA_IMAGE=${{ matrix.GRAFANA_IMAGE.NAME }} docker compose up -d
 
       - name: Wait for Grafana to start
-        uses: nev7n/wait_for_response@v1
+        uses: nev7n/wait_for_response@7fef3c1a6e8939d0b09062f14fec50d3c5d15fa1 # v1.0.1
         with:
           url: 'http://localhost:3000/'
           responseCode: 200
@@ -84,7 +94,7 @@ jobs:
         run: yarn playwright test
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: ${{ (always() && steps.run-tests.outcome == 'success') || (failure() && steps.run-tests.outcome == 'failure') }}
         with:
           name: playwright-report-${{ matrix.GRAFANA_IMAGE.NAME }}-v${{ matrix.GRAFANA_IMAGE.VERSION }}-${{github.run_id}}
